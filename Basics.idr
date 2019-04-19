@@ -1,4 +1,4 @@
-{- NOTES: 
+{- NOTES:
   Use -p pruviloj to load the lib
   The data types for Bool and Nat are reused from the prelude
   and the duplicates of the operators on those types are prefixed with ^
@@ -11,7 +11,7 @@ import Pruviloj
 %default total
 %language ElabReflection
 
-data Day 
+data Day
   = Monday
   | Tuesday
   | Wednesday
@@ -109,7 +109,7 @@ all_zero _ = False
 
 -- data Nat = O | S Nat
 
-pred : Nat -> Nat 
+pred : Nat -> Nat
 pred Z = Z
 pred (S n) = n
 
@@ -144,7 +144,7 @@ test_mult1 = Refl
 
 minus : Nat -> Nat -> Nat
 minus Z b = Z
-minus n@(S _) Z = n 
+minus n@(S _) Z = n
 minus (S n) (S m) = Basics.minus n m
 
 exp : (base : Nat) -> (power: Nat) -> Nat
@@ -208,9 +208,9 @@ plus_1_1 n = Refl
 
 mult_0_1 : (n : Nat) -> Z ^* n = Z
 mult_0_1 n = Refl
- 
+
 plus_id_example : (n : Nat) -> (m : Nat) -> n = m -> n ^+ n = m ^+ m
-plus_id_example = %runElab ( do 
+plus_id_example = %runElab ( do
   intro `{{n}}
   intro `{{m}}
   intro `{{n_eq_m}}
@@ -219,7 +219,20 @@ plus_id_example = %runElab ( do
 )
 
 plus_id_exercise : (n : Nat) -> (m : Nat) -> (o : Nat) -> n = m -> m = o -> n ^+ m = m ^+ o
-plus_id_exercise = ?rhs
+plus_id_exercise = %runElab (do
+  intro `{{n}}
+  intro `{{m}}
+  intro `{{o}}
+  intro `{{n_eq_m}}
+  intro `{{m_eq_o}}
+  attack
+  rewriteWith (Var `{{m_eq_o}})
+  attack
+  rewriteWith (Var `{{n_eq_m}})
+  reflexivity
+  solve
+  solve
+)
 -- This should work:
 -- plus_id_exercise = %runElab ( do
 --   intro `{{n}}
