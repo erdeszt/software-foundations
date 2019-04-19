@@ -2,11 +2,15 @@
   Use -p pruviloj to load the lib
   The data types for Bool and Nat are reused from the prelude
   and the duplicates of the operators on those types are prefixed with ^
+  Missing:
+    - Exercise: 2 stars, standard, optional (decreasing)
+    - More Exercises(all)
 -}
 
 module Basics
 
 import Pruviloj
+import Pruviloj.Induction
 
 %default total
 %language ElabReflection
@@ -190,8 +194,20 @@ test_leb2 = Refl
 test_leb3 : leb 4 2 = False
 test_leb3 = Refl
 
+infixr 2 =?
+(=?) : Nat -> Nat -> Bool
+n =? m = eqb n m
+
+infixr 2 <=?
+(<=?) : Nat -> Nat -> Bool
+n <=? m = leb n m
+
 ltb : Nat -> Nat -> Bool
 ltb n m = andb (leb n m) (negb (eqb n m))
+
+infixr 2 <?
+(<?) : Nat -> Nat -> Bool
+n <? m = ltb n m
 
 test_ltb1 : ltb 2 2 = False
 test_ltb1 = Refl
@@ -209,7 +225,7 @@ plus_1_1 n = Refl
 mult_0_1 : (n : Nat) -> Z ^* n = Z
 mult_0_1 n = Refl
 
-plus_id_example : (n : Nat) -> (m : Nat) -> n = m -> n ^+ n = m ^+ m
+plus_id_example : (n, m : Nat) -> n = m -> n ^+ n = m ^+ m
 plus_id_example = %runElab ( do
   intro `{{n}}
   intro `{{m}}
@@ -218,7 +234,7 @@ plus_id_example = %runElab ( do
   reflexivity
 )
 
-plus_id_exercise : (n : Nat) -> (m : Nat) -> (o : Nat) -> n = m -> m = o -> n ^+ m = m ^+ o
+plus_id_exercise : (n, m, o: Nat) -> n = m -> m = o -> n ^+ m = m ^+ o
 plus_id_exercise = %runElab (do
   intro `{{n}}
   intro `{{m}}
@@ -233,27 +249,129 @@ plus_id_exercise = %runElab (do
   solve
   solve
 )
--- This should work:
--- plus_id_exercise = %runElab ( do
---   intro `{{n}}
---   intro `{{m}}
---   intro `{{o}}
---   intro `{{n_eq_m}}
---   intro `{{m_eq_o}}
---   rewriteWith (Var `{{m_eq_o}})
---   rewriteWith (Var `{{n_eq_m}})
---   reflexivity
--- )
--- Same in coq works(intermediate goals look the same)
--- Theorem plus_id_exercise : forall n m o : nat,
---   n = m -> m = o -> n + m = m + o.
--- Proof.
---   intro n.
---   intro m.
---   intro o.
---   intro n_eq_m.
---   intro m_eq_o.
---   rewrite <- m_eq_o.
---   rewrite <- n_eq_m.
---   reflexivity.
--- Qed.
+
+mult_0_plus : (n, m : Nat) -> (0 ^+ n) ^* m = n ^* m
+mult_0_plus = %runElab ( do
+  intro `{{n}}
+  intro `{{m}}
+  reflexivity
+)
+
+mult_S_1 : (n, m : Nat) -> m = S n -> m ^* (1 ^+ n) = m ^* m
+mult_S_1 = %runElab ( do
+  intro `{{n}}
+  intro `{{m}}
+  intro `{{m_succ_n}}
+  rewriteWith (Var `{{m_succ_n}})
+  reflexivity
+)
+
+plus_1_neq_0 : (n : Nat) -> n ^+ 1 =? 0 = False
+plus_1_neq_0 = %runElab ( do
+  intro `{{n}}
+  induction (Var `{{n}})
+  compute
+  reflexivity
+  attack
+  intro `{{nn}}
+  intro `{{ih}}
+  compute
+  reflexivity
+  solve
+)
+
+negb_involutive : (b : Bool) -> negb (negb b) = b
+negb_involutive = %runElab ( do
+  intro `{{b}}
+  induction (Var `{{b}})
+  compute
+  reflexivity
+  compute
+  reflexivity
+)
+
+andb_commutative : (b, c : Bool) -> andb b c = andb c b
+andb_commutative = %runElab ( do
+  intro `{{b}}
+  intro `{{c}}
+  let ind_c_prf = do
+    induction (Var `{{c}})
+    compute
+    reflexivity
+    compute
+    reflexivity
+  induction (Var `{{b}})
+  ind_c_prf
+  ind_c_prf
+  -- Without the ind_c_prf lemma
+  -- intro `{{b}}
+  -- intro `{{c}}
+  -- induction (Var `{{b}})
+  -- induction (Var `{{c}})
+  -- compute
+  -- reflexivity
+  -- compute
+  -- reflexivity
+  -- induction (Var `{{c}})
+  -- compute
+  -- reflexivity
+  -- compute
+  -- reflexivity
+)
+
+andb3_exchange : (b, c, d : Bool) -> andb (andb b c) d = andb (andb b d) c
+andb3_exchange = %runElab ( do
+  intro `{{b}}
+  intro `{{c}}
+  intro `{{d}}
+  let ind_d_prf = do
+    induction (Var `{{d}})
+    compute
+    reflexivity
+    compute
+    reflexivity
+  induction (Var `{{b}})
+  induction (Var `{{c}})
+  ind_d_prf
+  compute
+  reflexivity
+  induction (Var `{{c}})
+  ind_d_prf
+  ind_d_prf
+  -- Manual version omitted because it's super long
+)
+
+andb_true_elim2 : (b, c : Bool) -> andb b c = True -> c = True
+andb_true_elim2 = %runElab ( do
+  intro `{{b}}
+  intro `{{c}}
+  induction (Var `{{b}})
+  compute
+  attack
+  intro `{{contra}}
+  induction (Var `{{c}})
+  compute
+  exact (Var `{{contra}})
+  compute
+  reflexivity
+  solve
+  compute
+  attack
+  intro `{{c_eq_True}}
+  exact (Var `{{c_eq_True}})
+  solve
+)
+
+zero_nbeq_plus_1 : (n : Nat) -> 0 =? (n + 1) = False
+zero_nbeq_plus_1 = %runElab ( do
+  intro `{{n}}
+  induction (Var `{{n}})
+  compute
+  reflexivity
+  attack
+  intro `{{nn}}
+  intro `{{ih}}
+  compute
+  reflexivity
+  solve
+)
