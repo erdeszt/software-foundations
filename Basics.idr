@@ -5,6 +5,7 @@
   Missing:
     - Exercise: 2 stars, standard, optional (decreasing)
     - More Exercises(all)
+      - TODO: Figure out universal quantification in idris
 -}
 
 module Basics
