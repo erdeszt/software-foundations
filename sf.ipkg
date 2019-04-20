@@ -1,0 +1,11 @@
+package softwarefoundationsidris
+
+main = Main
+
+pkgs = pruviloj
+
+modules = Basics
+        , BasicsWithPatternMatchingProofs
+        , Induction
+        , Test
+
