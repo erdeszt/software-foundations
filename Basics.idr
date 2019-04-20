@@ -37,6 +37,7 @@ test_next_weekday = Refl
 
 -- data Bool = True | False
 
+public export
 negb : Bool -> Bool
 negb True = False
 negb False = True
@@ -129,6 +130,7 @@ evenb Z = True
 evenb (S Z) = False
 evenb (S (S n)) = evenb n
 
+public export
 oddb : Nat -> Bool
 oddb n = negb (evenb n)
 
