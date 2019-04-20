@@ -4,6 +4,7 @@
 
 module Induction
 
+import Basics
 import Pruviloj
 import Pruviloj.Induction
 
@@ -76,18 +77,11 @@ double_plus (S k) = double_lemma k
       rewrite plus_comm k (S (S k)) in
       Refl
 
-evenb : Nat -> Bool
-evenb Z = True
-evenb (S Z) = False
-evenb (S (S n)) = evenb n
-
-negb : Bool -> Bool
-negb True = False
-negb False = True
-
-evenb_S : (n : Nat) -> evenb (S n) = negb (evenb n)
+evenb_S : (n : Nat) -> evenb (S n) = not (evenb n)
 evenb_S Z = Refl
-evenb_S (S k) =
-  let rec = evenb_S k in
-    ?wat
+evenb_S (S Z) = Refl
+evenb_S (S (S n)) =
+  let rec = evenb_S n in
+  rewrite rec in Refl
+
 
