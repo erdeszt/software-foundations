@@ -123,6 +123,7 @@ minustwo Z = Z
 minustwo (S Z) = Z
 minustwo (S (S n)) = n
 
+public export
 evenb : Nat -> Bool
 evenb Z = True
 evenb (S Z) = False
