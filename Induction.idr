@@ -1,7 +1,3 @@
-{- NOTES:
-  Use -p pruviloj to load the lib
--}
-
 module Induction
 
 import Basics
@@ -42,6 +38,12 @@ mult_0_r = %runElab proofByInductionOnNat
 
 plus_n_Sm : (n, m : Nat) -> S (n + m) = n + (S m)
 plus_n_Sm = %runElab (proofByInductionOnNat' (intro `{{m}}))
+
+plus_1_1 : (n : Nat) -> plus n 1 = S n
+plus_1_1 Z = Refl
+plus_1_1 (S k) =
+  let rec = plus_1_1 k in
+  rewrite rec in Refl
 
 plus_comm : (n, m : Nat) -> n + m = m + n
 plus_comm Z n = plus_comm_Z
@@ -84,4 +86,29 @@ evenb_S (S (S n)) =
   let rec = evenb_S n in
   rewrite rec in Refl
 
+mult_0_plus' : (n, m : Nat) -> (0 + n) * m = n * m
+mult_0_plus' Z Z = Refl
+mult_0_plus' Z (S k) = Refl
+mult_0_plus' (S k) Z = Refl
+mult_0_plus' (S k) (S j) = let rec = mult_0_plus' k j in Refl
+-- or with Elab
+-- mult_0_plus' = %runElab (proofByInductionOnNat' (intro `{{m}}))
 
+plus_k_Sj : (k, j : Nat) -> k + (S j) = j + (S k)
+plus_k_Sj Z Z = Refl
+plus_k_Sj Z (S k) = rewrite plus_1_1 k in Refl
+plus_k_Sj (S k) Z = rewrite plus_1_1 k in Refl
+plus_k_Sj (S k) (S j) =
+  let rec = plus_k_Sj k j in
+  rewrite plus_comm k (S (S j)) in
+  rewrite plus_comm j (S (S k)) in
+  rewrite plus_comm j k in Refl
+
+plus_rearrange : (n, m, p, q : Nat) -> (n + m) + (p + q) = (m + n) + (p + q)
+plus_rearrange Z Z Z Z = Refl
+plus_rearrange Z Z Z (S k) = Refl
+plus_rearrange Z Z (S k) q = Refl
+plus_rearrange Z (S k) Z q = rewrite plus_n_0 k in Refl
+plus_rearrange Z (S k) (S j) q = rewrite plus_n_0 k in Refl
+plus_rearrange (S k) Z p q = rewrite plus_n_0 k in Refl
+plus_rearrange (S k) (S j) p q = rewrite plus_k_Sj j k in Refl
