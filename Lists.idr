@@ -1,6 +1,7 @@
 module Lists
 
 import Basics
+import Induction
 import Pruviloj
 import Pruviloj.Induction
 
@@ -108,4 +109,197 @@ test_alternate3 = Refl
 test_alternate4 : alternate [] [20, 30] = [20, 30]
 test_alternate4 = Refl
 
--- WIP at: Exercise: 3 stars, standard, recommended (bag_functions)
+Bag : Type
+Bag = NatList
+
+count : Nat -> Bag -> Nat
+count _ [] = 0
+count v (x :: xs) = if v == x then S (count v xs) else count v xs
+
+test_count1 : count 1 [1, 2, 3, 1, 4, 1] = 3
+test_count1 = Refl
+test_count2 : count 6 [1, 2, 3, 1, 4, 1] = 0
+test_count2 = Refl
+
+sum : Bag -> Bag -> Bag
+sum xs ys = xs ++ ys
+
+test_sum1 : count 1 (sum [1, 2, 3] [1, 4, 1]) = 3
+test_sum1 = Refl
+
+add : Nat -> Bag -> Bag
+add v xs = v :: xs
+
+test_add1 : count 1 (add 1 [1, 4, 1]) = 3
+test_add1 = Refl
+test_add2 : count 5 (add 1 [1, 4, 1]) = 0
+test_add2 = Refl
+
+member : Nat -> Bag -> Bool
+member _ [] = False
+member v (x :: xs) = v == x || member v xs
+
+test_member1 : member 1 [1, 4, 1] = True
+test_member1 = Refl
+test_member2 : member 2 [1, 4, 1] = False
+test_member2 = Refl
+
+remove_one : Nat -> Bag -> Bag
+remove_one _ [] = []
+remove_one v (x :: xs) = if v == x then xs else x :: remove_one v xs
+
+test_remove_one1 : count 5 (remove_one 5 [2, 1, 5, 4, 1]) = 0
+test_remove_one1 = Refl
+test_remove_one2 : count 5 (remove_one 5 [2, 1, 4, 1]) = 0
+test_remove_one2 = Refl
+test_remove_one3 : count 4 (remove_one 5 [2, 1, 4, 5, 1, 4]) = 2
+test_remove_one3 = Refl
+test_remove_one4 : count 5 (remove_one 5 [2, 1, 5, 4, 5, 1, 4]) = 1
+test_remove_one4 = Refl
+
+remove_all : Nat -> Bag -> Bag
+remove_all _ [] = []
+remove_all v (x :: xs) = if v == x then remove_all v xs else x :: remove_all v xs
+
+test_remove_all1 : count 5 (remove_all 5 [2, 1, 5, 4, 1]) = 0
+test_remove_all1 = Refl
+test_remove_all2 : count 5 (remove_all 5 [2, 1, 4, 1]) = 0
+test_remove_all2 = Refl
+test_remove_all3 : count 4 (remove_all 5 [2, 1, 4, 5, 1, 4]) = 2
+test_remove_all3 = Refl
+test_remove_all4 : count 5 (remove_all 5 [2, 1, 5, 4, 5, 1, 4, 5, 1, 4]) = 0
+test_remove_all4 = Refl
+
+subset : Bag -> Bag -> Bool
+subset [] _ = True
+subset (s :: ss) xs =
+  if member s xs
+    then subset ss (remove_one s xs)
+    else False
+
+test_subset1 : subset [1, 2] [2, 1, 4, 1] = True
+test_subset1 = Refl
+test_subset2 : subset [1, 2, 2] [2, 1, 4, 1] = False
+test_subset2 = Refl
+
+nil_app : (l : NatList) -> [] ++ l = l
+nil_app l = Refl
+
+tl_length_pred : (l : NatList) -> pred (length l) = length (tl l)
+tl_length_pred [] = Refl
+tl_length_pred (x :: xs) = Refl
+
+-- With Elab
+-- tl_length_pred = %runElab ( do
+--   intro `{{l}}
+--   induction (Var `{{l}})
+--   compute
+--   reflexivity
+--   attack
+--   intro `{{n}}
+--   intro `{{xs}}
+--   intro `{{ih}}
+--   compute
+--   reflexivity
+--   solve
+-- )
+
+app_assoc : (l1, l2, l3 : NatList) -> (l1 ++ l2) ++ l3 = l1 ++ (l2 ++ l3)
+app_assoc [] l2 l3 = Refl
+app_assoc (x :: xs) l2 l3 =
+ let rec = app_assoc xs l2 l3 in
+ rewrite rec in Refl
+
+-- app_assoc = %runElab ( do
+--   intro `{{l1}}
+--   intro `{{l2}}
+--   intro `{{l3}}
+--   induction (Var `{{l1}})
+--   compute
+--   reflexivity
+--   attack
+--   intro `{{n}}
+--   intro `{{xs}}
+--   intro `{{ih}}
+--   compute
+--   rewriteWith (Var `{{ih}})
+--   reflexivity
+--   solve
+-- )
+
+rev : NatList -> NatList
+rev [] = []
+rev (x :: xs) = rev xs ++ [x]
+
+test_rev1 : rev [1, 2, 3] = [3, 2, 1]
+test_rev1 = Refl
+test_rev2 : rev [] = []
+test_rev2 = Refl
+
+app_length : (l1, l2 : NatList) -> length (l1 ++ l2) = length l1 + length l2
+app_length [] l2 = Refl
+app_length (x :: xs) l2 =
+  let rec = app_length xs l2 in
+  rewrite rec in
+  Refl
+
+rev_length : (l : NatList) -> length (rev l) = length l
+rev_length [] = Refl
+rev_length (x :: xs) =
+  let rec = rev_length xs in
+  rewrite sym rec in
+  rewrite app_length (rev xs) [x] in
+  rewrite plus_1_1 (length (rev xs))  in
+  Refl
+
+app_nil_r : (l : NatList) -> l ++ [] = l
+app_nil_r [] = Refl
+app_nil_r (x :: xs) =
+  let rec = app_nil_r xs in
+  rewrite rec in
+  Refl
+
+-- app_nil_r = %runElab ( do
+--   intro `{{l}}
+--   induction (Var `{{l}})
+--   compute
+--   reflexivity
+--   attack
+--   intro `{{n}}
+--   intro `{{xs}}
+--   intro `{{ih}}
+--   compute
+--   rewriteWith (Var `{{ih}})
+--   reflexivity
+--   solve
+-- )
+
+rev_app_distr : (l1, l2 : NatList) -> rev (l1 ++ l2) = rev l2 ++ rev l1
+rev_app_distr [] l2 = rewrite app_nil_r (rev l2) in Refl
+rev_app_distr (x :: xs) l2 =
+  let rec = rev_app_distr xs l2 in
+  rewrite rec in
+  rewrite app_assoc (rev l2) (rev xs) [x] in
+  Refl
+
+rev_cons_lemma : (x : Nat) -> (xs : NatList) -> rev xs ++ [x] = x :: rev xs
+
+rev_lemma : (x : Nat) -> (xs : NatList) -> rev (rev xs ++ [x]) = x :: xs
+rev_lemma x [] = Refl
+rev_lemma x (xHead :: xs) =
+  -- let rec = rev_lemma x xs in
+  -- rewrite rec in
+  -- Before: rev ((rev xs ++ [xHead]) ++ [x]) = x :: xHead :: xs
+  -- rewrite  rev_cons_lemma xHead xs in
+  -- After: rev (rev xs ++ [x]) ++ [xHead] = x :: xHead :: xs
+  -- rewrite rev_cons_lemma x xs in
+  ?watup_2
+
+rev_involutive : (l : NatList) -> rev (rev l) = l
+-- rev_involutive = ?rhs
+rev_involutive [] = Refl
+rev_involutive (x :: xs) =
+  -- let rec = rev_involutive xs in
+  -- rewrite sym rec in
+  -- ?wat
+  rewrite rev_lemma x xs in Refl

@@ -39,6 +39,7 @@ mult_0_r = %runElab proofByInductionOnNat
 plus_n_Sm : (n, m : Nat) -> S (n + m) = n + (S m)
 plus_n_Sm = %runElab (proofByInductionOnNat' (intro `{{m}}))
 
+public export
 plus_1_1 : (n : Nat) -> plus n 1 = S n
 plus_1_1 Z = Refl
 plus_1_1 (S k) =
