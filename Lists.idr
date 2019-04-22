@@ -282,24 +282,10 @@ rev_app_distr (x :: xs) l2 =
   rewrite app_assoc (rev l2) (rev xs) [x] in
   Refl
 
-rev_cons_lemma : (x : Nat) -> (xs : NatList) -> rev xs ++ [x] = x :: rev xs
-
-rev_lemma : (x : Nat) -> (xs : NatList) -> rev (rev xs ++ [x]) = x :: xs
-rev_lemma x [] = Refl
-rev_lemma x (xHead :: xs) =
-  -- let rec = rev_lemma x xs in
-  -- rewrite rec in
-  -- Before: rev ((rev xs ++ [xHead]) ++ [x]) = x :: xHead :: xs
-  -- rewrite  rev_cons_lemma xHead xs in
-  -- After: rev (rev xs ++ [x]) ++ [xHead] = x :: xHead :: xs
-  -- rewrite rev_cons_lemma x xs in
-  ?watup_2
-
 rev_involutive : (l : NatList) -> rev (rev l) = l
--- rev_involutive = ?rhs
 rev_involutive [] = Refl
 rev_involutive (x :: xs) =
-  -- let rec = rev_involutive xs in
-  -- rewrite sym rec in
-  -- ?wat
-  rewrite rev_lemma x xs in Refl
+  let rec = rev_involutive xs in
+  rewrite rev_app_distr (rev xs) [x] in
+  rewrite rec in
+  Refl
