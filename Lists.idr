@@ -289,3 +289,26 @@ rev_involutive (x :: xs) =
   rewrite rev_app_distr (rev xs) [x] in
   rewrite rec in
   Refl
+
+app_assoc4 : (l1, l2, l3, l4 : NatList) -> l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4
+app_assoc4 [] [] l3 l4 = Refl
+app_assoc4 [] (x :: xs) l3 l4 = rewrite app_assoc xs l3 l4 in Refl
+app_assoc4 (x :: xs) l2 l3 l4 =
+  let rec = app_assoc4 xs l2 l3 l4 in
+  rewrite rec in
+  Refl
+
+nonzeros_app : (l1, l2 : NatList) -> nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2)
+nonzeros_app [] l2 = Refl
+nonzeros_app (x :: xs) [] =
+  rewrite app_nil_r (x :: xs) in
+  rewrite app_nil_r (nonzeros (x :: xs)) in
+  Refl
+nonzeros_app (x :: xs) (y :: ys) =
+  let rec = nonzeros_app xs ys in
+  -- rewrite sym rec in
+  ?wat_3
+
+--   rec : nonzeros (xs ++ ys) = nonzeros xs ++ nonzeros ys
+-- --------------------------------------
+-- wat_3 : nonzeros (x :: xs ++ y :: ys) = nonzeros (x :: xs) ++ nonzeros (y :: ys)
