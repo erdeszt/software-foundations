@@ -8,6 +8,12 @@ import Pruviloj.Induction
 %default total
 %language ElabReflection
 
+{-
+
+  Missing: rev_injective
+
+-}
+
 NatProd : Type
 NatProd = (Nat, Nat)
 
@@ -332,6 +338,10 @@ eq_refl_True' : (a : Nat) -> ((a == a) = True)
 eq_refl_True' Z = Refl
 eq_refl_True' (S k) = eq_refl_True' k
 
+eq_refl_True_impl : {a : Nat} -> ((a == a) = True)
+eq_refl_True_impl {a=Z} = Refl
+eq_refl_True_impl {a=(S k)} = eq_refl_True' k
+
 eqblist_refl : (l : List Nat) -> True = eqblist l l
 eqblist_refl [] = Refl
 eqblist_refl (Z :: xs) =
@@ -367,4 +377,105 @@ eqblist_refl ((S k) :: xs) =
 --   solve
 -- )
 
+count_member_nonzero : (s : Bag) ->  1 <=? (count 1 (1 :: s)) = True
+count_member_nonzero [] = Refl
+count_member_nonzero (x :: xs) = Refl
+
+leb_n_Sn : (n : Nat) -> n <=? (S n) = True
+leb_n_Sn Z = Refl
+leb_n_Sn (S k) =
+  let rec = leb_n_Sn k in
+  rewrite rec in
+  Refl
+
+remove_does_not_increase_count : (s : Bag) -> (count 0 (remove_one 0 s)) <=? (count 0 s) = True
+remove_does_not_increase_count [] = Refl
+remove_does_not_increase_count (Z :: xs) =
+  rewrite leb_n_Sn (count 0 xs) in
+  Refl
+remove_does_not_increase_count ((S k) :: xs) =
+  let rec = remove_does_not_increase_count xs in
+  rewrite rec in
+  Refl
+
+-- TODO
+rev_injective : (l1, l2 : NatList) -> rev l1 = rev l2 -> l1 = l2
+
+data NatOption : Type where
+  None : NatOption
+  Some : Nat -> NatOption
+
+nth_error : (l : NatList) -> (n : Nat) -> NatOption
+nth_error [] _ = None
+nth_error (x :: xs) Z = Some x
+nth_error (x :: xs) (S k) = nth_error xs k
+
+test_nth_error1 : nth_error [4, 5, 6, 7] 0 = Some 4
+test_nth_error1 = Refl
+test_nth_error2 : nth_error [4, 5, 6, 7] 3 = Some 7
+test_nth_error2 = Refl
+test_nth_error3 : nth_error [4, 5, 6, 7] 9 = None
+test_nth_error3 = Refl
+
+option_elim : (d : Nat) -> (o : NatOption) -> Nat
+option_elim default None = default
+option_elim _ (Some x) = x
+
+hd_error : (l : NatList) -> NatOption
+hd_error [] = None
+hd_error (x :: _) = Some x
+
+test_hd_error1 : hd_error [] = None
+test_hd_error1 = Refl
+test_hd_error2 : hd_error [1] = Some 1
+test_hd_error2 = Refl
+test_hd_error3 : hd_error [5, 6] = Some 5
+test_hd_error3 = Refl
+
+option_elim_hd : (l : NatList) -> (default : Nat) -> hd default l = option_elim default (hd_error l)
+option_elim_hd [] default = Refl
+option_elim_hd (x :: xs) default = Refl
+
+data Id = MkId Nat
+
+eqb_id : Id -> Id -> Bool
+eqb_id (MkId n) (MkId m) = eqb n m
+
+Eq Id where
+  a == b = eqb_id a b
+
+eqb_id_refl_True : (a : Id) -> ((a == a) = True)
+eqb_id_refl_True (MkId Z) = Refl
+eqb_id_refl_True (MkId (S k)) = eqb_id_refl_True (assert_smaller (MkId (S k)) (MkId k))
+
+eqb_id_inj : (a, b : Nat) -> a = b -> MkId a = MkId b
+eqb_id_inj' : (a, b : Nat) ->  MkId a = MkId b -> a = b
+
+eqb_id_refl_True' : (a : Nat) -> ((MkId a == MkId a) = True)
+eqb_id_refl_True' Z = Refl
+eqb_id_refl_True' (S k) = eqb_id_refl_True' k
+
+eqb_id_refl_True_impl : {a : Nat} -> ((MkId a == MkId a) = True)
+eqb_id_refl_True_impl {a=Z} = Refl
+eqb_id_refl_True_impl {a=(S k)} = eqb_id_refl_True' k
+
+data PartialMap : Type where
+  Empty : PartialMap
+  Record : (k : Id) -> (v : Nat) -> (m : PartialMap) -> PartialMap
+
+update : (m : PartialMap) -> (k : Id) -> (v : Nat) -> PartialMap
+update m k v = Record k v m
+
+find : (k : Id) -> (m : PartialMap) -> NatOption
+find k Empty = None
+find k (Record k' v m) =
+  if k == k' then Some v else find k m
+
+update_eq : (m : PartialMap) -> (k : Id) -> (v : Nat) -> find k (update m k v) = Some v
+-- update_eq = ?rhs
+update_eq Empty (MkId Z) v = Refl
+update_eq Empty (MkId (S k)) v = ?wat
+--   case update_eq Empty (MkId k) v of -- Idris bug?
+--     rec => rewrite sym rec in ?waaaa
+-- update_eq (Record x j m) k v = ?update_eq_rhs_2
 

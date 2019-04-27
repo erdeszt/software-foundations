@@ -180,12 +180,14 @@ infixl 7 ^*
 (^*) : Nat -> Nat -> Nat
 n ^* m = Basics.mult n m
 
+public export
 eqb : Nat -> Nat -> Bool
 eqb  Z     Z    = True
 eqb  Z    (S _) = False
 eqb (S _)  Z    = False
 eqb (S n) (S m) = eqb n m
 
+public export
 leb : Nat -> Nat -> Bool
 leb Z _= True
 leb (S _) Z = False
@@ -203,6 +205,7 @@ infixr 2 =?
 n =? m = eqb n m
 
 infixr 2 <=?
+public export
 (<=?) : Nat -> Nat -> Bool
 n <=? m = leb n m
 
