@@ -300,15 +300,71 @@ app_assoc4 (x :: xs) l2 l3 l4 =
 
 nonzeros_app : (l1, l2 : NatList) -> nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2)
 nonzeros_app [] l2 = Refl
-nonzeros_app (x :: xs) [] =
-  rewrite app_nil_r (x :: xs) in
-  rewrite app_nil_r (nonzeros (x :: xs)) in
+nonzeros_app (Z :: xs) l2 =
+  let rec = nonzeros_app xs l2 in
+  rewrite rec in
   Refl
-nonzeros_app (x :: xs) (y :: ys) =
-  let rec = nonzeros_app xs ys in
-  -- rewrite sym rec in
-  ?wat_3
+nonzeros_app ((S k) :: xs) l2 =
+  let rec = nonzeros_app xs l2 in
+  rewrite rec in
+  Refl
 
---   rec : nonzeros (xs ++ ys) = nonzeros xs ++ nonzeros ys
--- --------------------------------------
--- wat_3 : nonzeros (x :: xs ++ y :: ys) = nonzeros (x :: xs) ++ nonzeros (y :: ys)
+eqblist : (l1, l2 : List Nat) -> Bool
+eqblist [] [] = True
+eqblist [] l2 = False
+eqblist (x :: xs) [] = False
+eqblist (x :: xs) (y :: ys) = x == y && eqblist xs ys
+
+test_eqblist1 : eqblist [] [] = True
+test_eqblist1 = Refl
+test_eqblist2 : eqblist [1, 2, 3] [1, 2, 3] = True
+test_eqblist2 = Refl
+test_eqblist3 : eqblist [1, 2, 3] [1, 2, 4] = False
+test_eqblist3 = Refl
+
+eq_refl_True : (a, b : Nat) -> Maybe (a == b = True)
+eq_refl_True Z Z = Just Refl
+eq_refl_True Z (S k) = Nothing
+eq_refl_True (S k) Z = Nothing
+eq_refl_True (S k) (S j) = eq_refl_True k j
+
+eq_refl_True' : (a : Nat) -> ((a == a) = True)
+eq_refl_True' Z = Refl
+eq_refl_True' (S k) = eq_refl_True' k
+
+eqblist_refl : (l : List Nat) -> True = eqblist l l
+eqblist_refl [] = Refl
+eqblist_refl (Z :: xs) =
+  let rec = eqblist_refl xs in
+  rewrite rec in
+  Refl
+eqblist_refl ((S k) :: xs) =
+  rewrite eq_refl_True' k in
+  let rec = eqblist_refl xs in
+  rewrite rec in
+  Refl
+-- eqblist_refl = %runElab ( do
+--   intro `{{l}}
+--   induction (Var `{{l}})
+--   compute
+--   reflexivity
+--   attack
+--   intro `{{n}}
+--   intro `{{ns}}
+--   intro `{{ih}}
+--   compute
+--   rewriteWith (Var `{{ih}})
+--   induction (Var `{{n}})
+--   compute
+--   reflexivity
+--   attack
+--   intro `{{nn}}
+--   intro `{{ihh}}
+--   compute
+--   rewriteWith (Var `{{ihh}})
+--   reflexivity
+--   solve
+--   solve
+-- )
+
+
