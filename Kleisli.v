@@ -133,68 +133,31 @@ Instance kleisliCategory (M : Type -> Type) `(Monad M) : Category (kleisli M) :=
     
   }.
   
-  (*
-  monad_left_identity : 
-      forall (A B : Type) 
-             (f : A -> M B) 
-             {a : A}, 
-      bind (pure a) f = f a;
-  *)
-  
-Theorem kleisli_category_left_identity : forall {M : Type -> Type} `{Monad M} (A B : Type) (f : kleisli M A B), compose f id = f.
+Theorem kleisli_option_category_left_identity : forall (A B : Type) (f : kleisli option A B),
+  compose f id = f.
 Proof.
   intros.
-  symmetry.
   simpl.
-  rewrite <- (monad_left_identity A B f).
-  rewrite <- (fn_category_left_identity A (M B) f).
-  simpl.
-  
-Instance kleisliCorrectCategory (M : Type -> Type) `(MM : Monad M) `(CM : CorrectMonad M) : CorrectCategory (kleisli M) (kleisliCategory M MM) :=
-  {
-    category_left_identity := 1;
-    category_right_identity := 1;
-    category_associativity := 1;
-  }.
-  
-  
-(* Theorem kleisli_category_left_identity : forall (M : Type -> Type) `(CorrectMonad M) (A B : Type) (f : kleisli M A B), compose f id = f.
-Proof. 
+  reflexivity.
+Qed.
+
+Theorem kleisli_option_category_right_identity : forall (A B : Type) (f : kleisli option A B),
+  compose id f = f.
+Proof.
   intros.
-  destruct f.
-  simpl.
-Admitted. *)
-  
-(* TODO: The Monad/CorrectMonad might not be correct here *)
+Admitted.
 
-(*
-Instance correctKleisliCategory (M : Type -> Type) `(E : Monad M) `(CE : CorrectMonad M) `(Category (kleisli M)) : CorrectCategory (kleisli M) (kleisliCategory M E) :=  
+Theorem kleisli_option_category_associativity : forall (A B C D : Type) (f : kleisli option C D) (g : kleisli option B C)
+    (h : kleisli option A B),
+  compose f (compose g h) = compose (compose f g) h.
+Proof.
+  intros.
+Admitted.
+
+Instance kleisliOptionCorrectCategory : CorrectCategory (kleisli option) (kleisliCategory option optionMonad) :=
   {
-    
-    category_left_identity A B f := kleisli_category_left_identity M CE A B f;
-    category_right_identity := 1;
-    category_associativity := 1;
-    
+    category_left_identity := kleisli_option_category_left_identity;
+    category_right_identity := kleisli_option_category_right_identity;
+    category_associativity := kleisli_option_category_associativity;
   }.
-  
-*)
-
-(* TODO: 
-    - Kleisi instance for both
-*)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
