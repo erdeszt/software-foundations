@@ -71,34 +71,26 @@ Definition kleisli (F : Type -> Type) (A B : Type) : Type := A -> F B.
 
 Class Category (CAT : Type -> Type -> Type) : Type :=
   {
-  
     id : forall {A : Type}, CAT A A;
-  
     compose : forall {A B C : Type}, CAT B C -> CAT A B -> CAT A C;
-  
   }.
 
 Class CorrectCategory (CAT : Type -> Type -> Type) (E : Category CAT) : Type := 
   {
-  
     category_left_identity : forall {A B : Type} {f : CAT A B}, compose f id = f;
     
     category_right_identity : forall {A B : Type} {f : CAT A B}, compose id f = f;
 
     category_associativity : forall {A B C D : Type} {f : CAT C D} {g : CAT B C} {h : CAT A B},
       compose f (compose g h) = compose (compose f g) h;
-    
   }. 
  
 Definition Fn (A B : Type) := A -> B.
  
 Instance fnCategory : Category Fn :=
-  { 
-    
+  {
     id A := fun a => a;
-    
     compose A B C f g := fun a => f (g a);
-    
   }.
 
 Theorem eta_expand : forall (A B : Type) (f : A -> B), f = fun a => f a.
@@ -116,21 +108,16 @@ Proof. intros. simpl. reflexivity. Qed.
 
 Instance fnCorrectCategory : CorrectCategory Fn fnCategory :=
   {
-  
     category_left_identity := fn_category_left_identity;
     category_right_identity := fn_category_right_identity;
     category_associativity := fn_category_associativity;
-  
   }.
 
   
 Instance kleisliCategory (M : Type -> Type) `(Monad M) : Category (kleisli M) :=
   {
-  
     id A := pure;
-    
     compose A B C f g := fun a => bind (g a) f;
-    
   }.
   
 Theorem kleisli_option_category_left_identity : forall (A B : Type) (f : kleisli option A B),
