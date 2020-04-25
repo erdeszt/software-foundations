@@ -66,8 +66,6 @@ Instance correctOptionMonad : CorrectMonad option optionMonad :=
     monad_right_identity := option_monad_right_identity;
     monad_associativity := option_monad_associativity;
   }.
-  
-Definition kleisli (F : Type -> Type) (A B : Type) : Type := A -> F B.
 
 Class Category (CAT : Type -> Type -> Type) : Type :=
   {
@@ -93,9 +91,6 @@ Instance fnCategory : Category Fn :=
     compose A B C f g := fun a => f (g a);
   }.
 
-Theorem eta_expand : forall (A B : Type) (f : A -> B), f = fun a => f a.
-Proof. intros. reflexivity. Qed.
-
 Theorem fn_category_left_identity : forall (A B : Type) (f : Fn A B), compose f id = f.
 Proof. intros. simpl. reflexivity. Qed.
 
@@ -112,7 +107,8 @@ Instance fnCorrectCategory : CorrectCategory Fn fnCategory :=
     category_right_identity := fn_category_right_identity;
     category_associativity := fn_category_associativity;
   }.
-
+  
+Definition kleisli (F : Type -> Type) (A B : Type) : Type := A -> F B.
   
 Instance kleisliCategory (M : Type -> Type) `(Monad M) : Category (kleisli M) :=
   {
@@ -128,10 +124,41 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma option_match_id : forall (A : Type) (o : option A), 
+  match o with
+  | Some a => Some a
+  | None => None
+  end = o
+  .
+Proof. 
+  intros.
+  destruct o as [| a ].
+  - reflexivity.
+  - reflexivity.
+Qed. 
+
+Theorem eta_expand : forall (A B : Type) (f : A -> B), f = fun a => f a.
+Proof. intros. simpl. reflexivity. Qed.
+
+Theorem fuck_shit_up : forall (A B : Type) (f : A -> option B),
+  f = (fun a => 
+    match f a with
+    | Some a => Some a
+    | None => None
+    end).
+Proof. intros. Admitted.
+
 Theorem kleisli_option_category_right_identity : forall (A B : Type) (f : kleisli option A B),
   compose id f = f.
 Proof.
   intros.
+  simpl.
+  rewrite eta_expand.
+  rewrite 
+  simpl.
+  destruct f.
+  simpl.
+  rewrite (option_match_id A (f a)).
 Admitted.
 
 Theorem kleisli_option_category_associativity : forall (A B C D : Type) (f : kleisli option C D) (g : kleisli option B C)

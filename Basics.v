@@ -205,7 +205,7 @@ Fixpoint leb (n m : nat) : bool :=
 Definition ltb (n m : nat) : bool := leb n m && negb (eqb n m).
 
 Notation "x <? y" := (ltb x y) (at level 70) : nat_scope.
-
+Notation "x <=? y" := (leb x y) (at level 70) : nat_scope.
 Notation "x =? y" := (eqb x y) (at level 70) : nat_scope.
 
 Example test_ltb1 : (ltb 2 2) = false.
