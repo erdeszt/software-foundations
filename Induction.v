@@ -99,4 +99,3 @@ Restart.
   rewrite H.
   reflexivity.
 Qed.
-

@@ -88,7 +88,7 @@ Definition Fn (A B : Type) := A -> B.
 Instance fnCategory : Category Fn :=
   {
     id A := fun a => a;
-    compose A B C f g := fun a => f (g a);
+    compose A B C f g a := f (g a);
   }.
 
 Theorem fn_category_left_identity : forall (A B : Type) (f : Fn A B), compose f id = f.
@@ -113,7 +113,7 @@ Definition kleisli (F : Type -> Type) (A B : Type) : Type := A -> F B.
 Instance kleisliCategory (M : Type -> Type) `(Monad M) : Category (kleisli M) :=
   {
     id A := pure;
-    compose A B C f g := fun a => bind (g a) f;
+    compose A B C f g a := bind (g a) f;
   }.
   
 Theorem kleisli_option_category_left_identity : forall (A B : Type) (f : kleisli option A B),
@@ -140,25 +140,61 @@ Qed.
 Theorem eta_expand : forall (A B : Type) (f : A -> B), f = fun a => f a.
 Proof. intros. simpl. reflexivity. Qed.
 
-Theorem fuck_shit_up : forall (A B : Type) (f : A -> option B),
-  f = (fun a => 
-    match f a with
-    | Some a => Some a
-    | None => None
-    end).
-Proof. intros. Admitted.
+(* Theorem fn_category_associativity : forall (A B C D : Type) (f : Fn C D) (g : Fn B C) (h : Fn A B),
+  compose f (compose g h) = compose (compose f g) h *)
+
+Check fun f: kleisli option nat nat => compose id id f.
+
+(* Theorem option_compo
+f : kleisli option A B
+H : (fun x : B => Some x) = pure
+______________________________________(1/1)
+compose pure f = f
+
+ *)
+ 
+Theorem option_monad_right_identity2 : forall {A : Type} {m : option A}, bind m pure = m.
+Proof.
+  intros A m.
+  destruct m as [| a].
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
+ 
+Theorem compose_pure : forall (A B : Type) (f : A -> option B),
+  compose pure f = f.
+Proof.
+  intros.
+  unfold bind.
+  unfold compose.
+  unfold kleisliCategory.
+(*   rewrite (@option_monad_right_identity B (f _) (bind (f _) pure)). *)
+Admitted.
 
 Theorem kleisli_option_category_right_identity : forall (A B : Type) (f : kleisli option A B),
   compose id f = f.
 Proof.
   intros.
-  simpl.
-  rewrite eta_expand.
-  rewrite 
-  simpl.
-  destruct f.
-  simpl.
-  rewrite (option_match_id A (f a)).
+  unfold id.
+  unfold kleisliCategory.
+  unfold pure.
+  unfold optionMonad.
+
+  assert (H : (fun x : B => Some x) = pure). {
+    simpl. reflexivity.
+  }
+  rewrite H.
+  
+  (*
+  rewrite (fn_category_associativity A (option B) (option B) (option B) id id f).
+  *)
+  (*
+  rewrite <- (fn_category_left_identity A (option B) f).
+  *)
+  (*
+  rewrite (kleisli_option_category_left_identity A B f).
+  *)
+  
 Admitted.
 
 Theorem kleisli_option_category_associativity : forall (A B C D : Type) (f : kleisli option C D) (g : kleisli option B C)
