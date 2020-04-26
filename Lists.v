@@ -512,15 +512,16 @@ Qed.
 Theorem rev_nil : rev [] = [].
 Proof. simpl. reflexivity. Qed.
 
-(*
+
 Theorem rev_inj : forall l1 l2 : natlist,
   rev l1 = rev l2 -> l1 = l2.
 Proof.
   intros.
-  
-Admitted.
-*)
-
+  rewrite <- rev_involutive.
+  rewrite <- H.
+  rewrite rev_involutive.
+  reflexivity.
+Qed.
 
 Inductive natoption : Type :=
   | Some (n : nat)
