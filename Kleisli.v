@@ -18,8 +18,8 @@ Class CorrectMonad (M : Type -> Type) `(E : Monad M) :=
       bind m pure = m;
   
     monad_associativity : 
-      forall {A B C : Type} 
-             {f : A -> M B} 
+      forall {A B C : Type},
+      forall {f : A -> M B} 
              {g : B -> M C} 
              {m : M A}, 
       bind (bind m f) g = bind m (fun (a : A) => bind (f a) g);
@@ -124,52 +124,6 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma option_match_id : forall (A : Type) (o : option A), 
-  match o with
-  | Some a => Some a
-  | None => None
-  end = o
-  .
-Proof. 
-  intros.
-  destruct o as [| a ].
-  - reflexivity.
-  - reflexivity.
-Qed. 
-
-Theorem eta_expand : forall (A B : Type) (f : A -> B), f = fun a => f a.
-Proof. intros. simpl. reflexivity. Qed.
-
-(* Theorem fn_category_associativity : forall (A B C D : Type) (f : Fn C D) (g : Fn B C) (h : Fn A B),
-  compose f (compose g h) = compose (compose f g) h *)
-
-Check fun f: kleisli option nat nat => compose id id f.
-
-(* Theorem option_compo
-f : kleisli option A B
-H : (fun x : B => Some x) = pure
-______________________________________(1/1)
-compose pure f = f
-
- *)
- 
-Theorem option_monad_right_identity2 : forall {A : Type} {m : option A}, bind m pure = m.
-Proof.
-  intros A m.
-  destruct m as [| a].
-  - simpl. reflexivity.
-  - simpl. reflexivity.
-Qed.
- 
-Theorem compose_pure : forall (A B : Type) (f : A -> option B),
-  compose pure f = f.
-Proof.
-  intros.
-  unfold bind.
-  unfold compose.
-  unfold kleisliCategory.
-(*   rewrite (@option_monad_right_identity B (f _) (bind (f _) pure)). *)
-Admitted.
 
 Theorem kleisli_option_category_right_identity : forall (A B : Type) (f : kleisli option A B),
   compose id f = f.
@@ -184,17 +138,6 @@ Proof.
     simpl. reflexivity.
   }
   rewrite H.
-  
-  (*
-  rewrite (fn_category_associativity A (option B) (option B) (option B) id id f).
-  *)
-  (*
-  rewrite <- (fn_category_left_identity A (option B) f).
-  *)
-  (*
-  rewrite (kleisli_option_category_left_identity A B f).
-  *)
-  
 Admitted.
 
 Theorem kleisli_option_category_associativity : forall (A B C D : Type) (f : kleisli option C D) (g : kleisli option B C)
