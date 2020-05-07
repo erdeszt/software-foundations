@@ -215,8 +215,161 @@ Definition option_map {X Y : Type} (f : X -> Y) (xo : option X) : option Y :=
     | Some x => Some (f x)
   end. 
 
-(* TODO : Fold *)
+Fixpoint fold {X Y: Type} (f: X -> Y -> Y) (l: list X) (b: Y) : Y :=
+  match l with
+  | nil => b
+  | h :: t => f h (fold f t b)
+  end.
+  
+Definition fold_length {X : Type} (l : list X) : nat :=
+  fold (fun _ n => S n) l 0.
 
 
+Lemma fold_length_S : forall (X : Type) (l : list X) (x : X),
+  fold_length (x :: l) = S (fold_length l).
+Proof.
+  intros.
+  induction l as [| h t IHn ].
+  - simpl. unfold fold_length. simpl. reflexivity.
+  - simpl. unfold fold_length. simpl. reflexivity.
+Qed.
 
 
+Theorem fold_length_correct : forall (X : Type) (l : list X),
+  fold_length l = length l.
+Proof.
+  intros.
+  induction l as [| h t IHn ].
+  - simpl. unfold fold_length. simpl. reflexivity.
+  - simpl. rewrite fold_length_S. rewrite IHn. reflexivity.
+Qed.
+
+Definition fold_map {X Y : Type} (f : X -> Y) (l : list X) : list Y :=
+  fold (fun x xs => f x :: xs) l nil.
+  
+Example fold_map_test : fold_map (fun n => S n) [1; 10; 100] = [2; 11; 101].
+Proof. reflexivity. Qed.
+
+Lemma fold_map_cons : forall (X Y : Type) (f : X -> Y) (l : list X) (x : X),
+  fold_map f (x :: l) = f x :: fold_map f l.
+Proof.
+  intros.
+  induction l as [| h t IHn ].
+  - simpl. unfold fold_map. simpl. reflexivity.
+  - simpl. unfold fold_map. simpl. reflexivity.
+Qed.
+
+Theorem fold_map_correct : forall (X Y : Type) (f : X -> Y) (l : list X),
+  fold_map f l = map f l.
+Proof.
+  intros.
+  induction l as [| h t IHn ].
+  - simpl. unfold fold_map. simpl. reflexivity.
+  - simpl. rewrite fold_map_cons. rewrite IHn. reflexivity.
+Qed.
+
+Definition prod_curry {X Y Z : Type}
+  (f : X * Y -> Z) (x : X) (y : Y) : Z := 
+  f (x, y).
+  
+Definition prod_uncurry {X Y Z : Type}
+  (f : X -> Y -> Z) (p : X * Y) : Z :=
+  f (fst p) (snd p).
+  
+Theorem uncurry_curry : 
+  forall (X Y Z : Type)
+         (f : X -> Y -> Z)
+         (x : X)
+         (y : Y),
+  prod_curry (prod_uncurry f) x y = f x y.
+Proof.
+  intros.
+  unfold prod_curry.
+  unfold prod_uncurry.
+  simpl.
+  reflexivity.
+Qed.
+
+Theorem curry_uncurry :
+  forall (X Y Z : Type)
+         (f : X * Y -> Z)
+         (x : X)
+         (y : Y),
+  prod_uncurry (prod_curry f) (x, y) = f (x, y).
+Proof.
+  intros.
+  unfold prod_uncurry.
+  unfold prod_curry.
+  simpl.
+  reflexivity.
+Qed.
+
+Module Church.
+
+Definition doit3times {X : Type} (f : X -> X) (n : X) : X :=
+  f (f (f n)).
+
+Definition cnat := forall (X : Type), (X -> X) -> X -> X.
+
+Definition one : cnat :=
+  fun (X : Type) (f : X -> X) (x : X) => f x.
+
+Definition two : cnat :=
+  fun (X : Type) (f : X -> X) (x : X) => f (f x).
+  
+Definition zero : cnat :=
+  fun (X : Type) (f : X -> X) (x : X) => x.
+
+Definition three : cnat := @doit3times.
+
+Definition succ (n : cnat) : cnat :=
+  (fun {X : Type} (f : X -> X) => (fun x => f (n X f x))).
+  
+Example succ_1 : succ zero = one.
+Proof. simpl. reflexivity. Qed.
+
+Example succ_2 : succ (succ zero) = two.
+Proof. simpl. reflexivity. Qed.
+
+Definition plus (n m : cnat) : cnat :=
+  (fun {X : Type} (f : X -> X) => fun x => n X f (m X f x)).
+
+Example plus_1 : plus zero one = one.
+Proof. reflexivity. Qed.
+
+Example plus_2 : plus two three = plus three two.
+Proof. reflexivity. Qed.
+
+Definition mult (n m : cnat) : cnat :=
+  fun {X : Type} (f : X -> X) => fun x => n X (m X f) x.
+
+Example mult_1 : mult one one = one.
+Proof. reflexivity. Qed.
+
+Example mult_2 : mult zero three = zero.
+Proof. reflexivity. Qed.
+
+Example mult_3 : mult two three = plus three three.
+Proof. reflexivity. Qed.
+
+Definition c2n (c : cnat) : nat := c nat S 0.
+
+Check (mult two (mult three three)).
+
+Definition exp (n m : cnat) : cnat :=
+ fun {X : Type} => (m (X -> X) (n X)).
+
+Compute c2n (exp two two).
+Compute c2n (exp two three).
+
+
+Example exp_1 : exp two two = plus two two.
+Proof. reflexivity. Qed.
+
+Example exp_2 : exp three zero = one.
+Proof. reflexivity. Qed.
+
+Example exp_3 : exp three three = mult three (mult three three).
+Proof. reflexivity. Qed.
+
+End Church.

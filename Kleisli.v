@@ -130,6 +130,16 @@ Theorem kleisli_option_category_right_identity : forall (A B : Type) (f : kleisl
 Proof.
   intros.
   unfold id.
+  simpl.
+  assert (H : forall (x : A), match f x with
+                              | Some a0 => Some a0
+                              | None => None
+                              end = f x). {
+    intros. destruct x.
+  }
+
+  
+  unfold id.
   unfold kleisliCategory.
   unfold pure.
   unfold optionMonad.
