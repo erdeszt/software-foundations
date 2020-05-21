@@ -312,15 +312,203 @@ Proof.
   reflexivity.
 Qed.
 
+Definition sillyfun (n : nat) : bool :=
+  if n =? 3 then false
+  else if n =? 5 then false
+  else false.
 
+Theorem sillyfun_false : forall (n : nat),
+  sillyfun n = false.
+Proof.
+  intros.
+  unfold sillyfun.
+  destruct (n =? 3) eqn:E1.
+  - reflexivity.
+  - destruct (n =? 5) eqn:E2; reflexivity.
+Qed.
 
+Fixpoint split {X Y : Type} (l : list (X*Y)) : (list X) * (list Y) :=
+  match l with
+  | [] => ([], [])
+  | (x, y) :: t =>
+    match split t with
+    | (lx, ly) => (x :: lx, y :: ly)
+    end
+  end.
 
+Lemma list_cons_eq : forall X (l1 l2 : list X) (x : X),
+  l1 = l2 -> x :: l1 = x :: l2.
+Proof.
+  intros X l1 l2 x H. rewrite H. reflexivity.
+Qed.
 
+Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
+  split l = (l1, l2) ->
+  combine l1 l2 = l.
+Proof.
+  intros X Y l.
+  induction l.
+  - destruct l1.
+    + reflexivity.
+    + intros l2 H. discriminate H.
+  - intros l1 l2 H. destruct l1.
+    + destruct l2.
+      * simpl in H. destruct x. destruct (split l). discriminate H.
+      * simpl in H. destruct x. destruct (split l). discriminate H.
+    + destruct l2.
+      * simpl in H. destruct x. destruct (split l). discriminate H.
+      * simpl in H. destruct x. destruct (split l). simpl.
+        injection H as eq1 eq2 eq3 eq4.
+        rewrite eq1.
+        rewrite eq3.
+        apply list_cons_eq.
+        apply IHl.
+        rewrite eq2.
+        rewrite eq4.
+        reflexivity.
+Qed.
 
+Definition sillyfun1 (n : nat) : bool :=
+  if n =? 3 then true
+  else if n =? 5 then true
+  else false.
 
+Theorem sillyfun1_odd : forall(n : nat),
+     sillyfun1 n = true ->
+     oddb n = true.
+Proof.
+  intros n eq. unfold sillyfun1 in eq.
+  destruct (n =? 3) eqn:E3.
+  apply eqb_true in E3.
+  - rewrite E3. simpl. reflexivity.
+  - destruct (n =? 5) eqn:E5.
+    + apply eqb_true in E5.
+      rewrite E5. simpl. reflexivity.
+    + discriminate eq.
+Qed.
 
+Theorem bool_fn_applied_thrice :
+  forall (f : bool -> bool) (b : bool),
+  f (f (f b)) = f b.
+Proof.
+Restart.
+  intros f b.
+  destruct b eqn:E.
+  - destruct (f true) eqn:E1.
+    + rewrite E1. rewrite E1. reflexivity.
+    + destruct (f false) eqn:E2.
+      * rewrite E1. reflexivity.
+      * rewrite E2. reflexivity.
+  - destruct (f false) eqn:E2.
+      * destruct (f true) eqn:E3.
+        ** rewrite E3. reflexivity.
+        ** rewrite E2. reflexivity.
+      * rewrite E2. rewrite E2. reflexivity.
+Qed.
 
+Theorem eqb_sym : forall (n m : nat),
+  (n =? m) = (m =? n).
+Proof.
+  intros n.
+  induction n as [| n IHn' ].
+  - intros. destruct m.
+    + reflexivity.
+    + simpl. reflexivity.
+  - intros. destruct m.
+    + simpl. reflexivity.
+    + simpl. apply IHn'.
+Qed.
 
+Theorem eqb_trans : forall (n m p : nat),
+  n =? m = true ->
+  m =? p = true ->
+  n =? p = true.
+Proof.
+  intros n.
+  induction n as [| n' IHn' ].
+  - intros. destruct m eqn:Em.
+    + exact H0.
+    + destruct p eqn:Ep.
+      * simpl. reflexivity.
+      * apply H.
+  - intros m.
+    destruct m eqn:Em.
+    + intros. destruct p eqn:Ep.
+      * exact H.
+      * discriminate H.
+    + intros. destruct p eqn:Ep.
+      * discriminate H0.
+      * apply eqb_true in H0.
+        rewrite <- H0.
+        exact H.
+Restart.
+  intros n m p eq1 eq2.
+  apply eqb_true in eq1.
+  apply eqb_true in eq2.
+  rewrite <- eq1 in eq2.
+  rewrite eq2.
+  apply eqb_refl.
+Qed.
 
+Theorem filter_exercise : forall (X : Type) (test : X -> bool) (x : X) (l lf : list X),
+  filter test l = x :: lf ->
+  test x = true.
+Proof.
+  intros X test x l lf.
+  generalize dependent x.
+  induction l as [| h l' IHl' ].
+  - intros. discriminate H.
+  - simpl. destruct (test h) eqn:T.
+    + intros. injection H as eq1 eq2.
+      rewrite eq1 in T. exact T.
+    + intros. apply IHl'. exact H.
+Qed.
 
+Fixpoint forallb {X : Type} (test : X -> bool) (l : list X) : bool :=
+  match l with
+  | nil => true
+  | h :: t => andb (test h) (forallb test t)
+  end.
 
+Compute (forallb oddb [1; 2; 3]).
+Compute (forallb oddb [1; 3]).
+
+Fixpoint existsb {X : Type} (test : X -> bool) (l : list X) : bool :=
+  match l with
+  | nil => false
+  | h :: t => orb (test h) (existsb test t)
+  end.
+
+Compute (existsb oddb [2; 4; 6]).
+Compute (existsb oddb [2; 4; 5]).
+
+Definition existsb' {X : Type} (test : X -> bool) (l : list X) : bool := negb (forallb (fun x => negb (test x)) l).
+
+Compute (existsb' oddb [2; 4; 6]).
+Compute (existsb' oddb [2; 4; 5]).
+
+Theorem existsb_existsb' : forall (X : Type) (test : X -> bool) (l : list X),
+  existsb test l = existsb' test l.
+Proof.
+  intros.
+  induction l.
+  - simpl.
+    unfold existsb'.
+    simpl.
+    reflexivity.
+  - simpl.
+    rewrite IHl.
+    destruct (test x) eqn:TX.
+    + simpl.
+      unfold existsb'.
+      simpl.
+      rewrite TX.
+      simpl.
+      reflexivity.
+    + simpl.
+      unfold existsb'.
+      simpl.
+      rewrite TX.
+      simpl.
+      reflexivity.
+Qed.
