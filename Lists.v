@@ -611,7 +611,15 @@ Qed.
 
 End PartialMap.
 
-
+Fixpoint nth_error (l:natlist) (n:nat) : natoption :=
+  match l with
+  | nil => None
+  | a :: l' => 
+    match n =? O with
+    | true => Some a
+    | false => nth_error l' (pred n)
+    end
+  end.
 
 
 

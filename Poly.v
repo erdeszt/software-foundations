@@ -373,3 +373,10 @@ Example exp_3 : exp three three = mult three (mult three three).
 Proof. reflexivity. Qed.
 
 End Church.
+
+Fixpoint nth_error {X : Type} (l : list X) (n : nat)
+                   : option X :=
+  match l with
+  | [] => None
+  | a :: l' => if n =? O then Some a else nth_error l' (pred n)
+  end.
