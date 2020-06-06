@@ -124,38 +124,29 @@ Proof.
   reflexivity.
 Qed.
 
+Axiom functional_extensionality : forall {X Y : Type} {f g : X -> Y},
+  (forall (x : X), f x = g x) -> f = g.
 
 Theorem kleisli_option_category_right_identity : forall (A B : Type) (f : kleisli option A B),
   compose id f = f.
 Proof.
   intros.
-  unfold id.
   simpl.
-  assert (H : forall (x : A), match f x with
-                              | Some a0 => Some a0
-                              | None => None
-                              end = f x). {
-    intros. destruct x.
-  }
-
-  
-  unfold id.
-  unfold kleisliCategory.
-  unfold pure.
-  unfold optionMonad.
-
-  assert (H : (fun x : B => Some x) = pure). {
-    simpl. reflexivity.
-  }
-  rewrite H.
-Admitted.
+  apply functional_extensionality.
+  intros.
+  destruct (f x); reflexivity.
+Qed.
 
 Theorem kleisli_option_category_associativity : forall (A B C D : Type) (f : kleisli option C D) (g : kleisli option B C)
     (h : kleisli option A B),
   compose f (compose g h) = compose (compose f g) h.
 Proof.
   intros.
-Admitted.
+  simpl.
+  apply functional_extensionality.
+  intros x.
+  destruct (h x); reflexivity.
+Qed.
 
 Instance kleisliOptionCorrectCategory : CorrectCategory (kleisli option) (kleisliCategory option optionMonad) :=
   {
