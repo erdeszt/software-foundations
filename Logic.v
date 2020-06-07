@@ -370,7 +370,7 @@ Proof.
     + simpl in H. contradiction.
     + simpl in H. destruct H as [ H1 | H2 ].
       * exists x'. split.
-        ** reflexivity.
+        ** apply H1.
         ** simpl. left. reflexivity.
       * apply IHl' in H2. destruct H2 as [x2 H2]. destruct H2. exists x2. split.
           ** apply H.
@@ -540,36 +540,88 @@ Fixpoint rev_append {X} (l1 l2 : list X) : list X :=
 
 Definition tr_rev {X} (l : list X) : list X := rev_append l [].
 
-Theorem rev_app_single : forall {X} (l : list X) (n : X),
-  rev l ++ [n] = rev (n :: l).
+Lemma rev_append_app : forall X (l1 l2 : list X),
+  rev_append l1 l2 = rev l1 ++ l2.
 Proof.
-  intros.
-  destruct l as [| h t ].
+  intros X l1.
+  induction l1 as [| h t IHl1 ].
   - simpl. reflexivity.
-  - simpl. reflexivity.
+  - intros l2. destruct l2.
+    + simpl. rewrite IHl1. rewrite app_nil_r. reflexivity.
+    + simpl. rewrite IHl1. rewrite  <- app_assoc. simpl. reflexivity.
 Qed.
-
-Theorem tr_rev_app_single : forall {X} (l : list X) (n : X),
-  tr_rev l ++ [n] = tr_rev (n :: l).
-Proof.
-  intros.
-  destruct l as [| h t ].
-  - simpl. unfold tr_rev. simpl. reflexivity.
-  - unfold tr_rev. simpl.
-Admitted.
 
 Lemma tr_rev_correct : forall X, @tr_rev X = @Poly.rev X.
 Proof.
   intros.
   apply functional_extensionality.
   intros l.
-  induction l as [| h t IHl ].
-  - simpl. unfold tr_rev. simpl. reflexivity.
-  - rewrite <- rev_app_single.
-    rewrite <- tr_rev_app_single.
-    rewrite IHl.
-    reflexivity.
+  unfold tr_rev.
+  rewrite rev_append_app.
+  apply app_nil_r.
 Qed.
+
+Example even_42_bool : evenb 42 = true.
+Proof. reflexivity. Qed.
+
+Example even_42_props : exists k, 42 = double k.
+Proof. exists 21. reflexivity. Qed.
+
+Theorem evenb_double : forall k, evenb (double k) = true.
+Proof.
+  intros.
+  induction k as [| k' IHk ].
+  - simpl. reflexivity.
+  - simpl. apply IHk.
+Qed.
+
+Theorem evenb_S_double : forall k, evenb (S (double k)) = false.
+Proof.
+  intros.
+  induction k as [| k' IHk' ].
+  - simpl. reflexivity.
+  - apply IHk'.
+Qed.
+
+Require Export Induction.
+
+Theorem evenb_double_conv : forall n,
+  exists k, n = if evenb n then double k else S (double k).
+Proof.
+  intros n.
+  induction n as [| n' IHn ].
+  - simpl. exists 0. reflexivity.
+  - rewrite  evenb_S.
+    destruct (evenb n') eqn:E.
+    + destruct IHn as [k']. rewrite H. exists k'. simpl. reflexivity.
+    + destruct IHn as [k']. rewrite H. exists (S k'). simpl. reflexivity.
+Qed.
+
+
+Theorem even_bool_prop : forall n,
+  evenb n = true <-> exists k, n = double k.
+Proof.
+  intros n.
+  split.
+  - intros. destruct (evenb_double_conv n) as [k Hk]. rewrite Hk. rewrite H. exists k. reflexivity.
+  - intros. destruct (evenb_double_conv n) as [k Hk]. destruct H. rewrite H. apply evenb_double.
+Qed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
